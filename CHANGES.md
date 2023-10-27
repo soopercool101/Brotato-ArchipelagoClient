@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.2]
+
+### Fixed
+- Fix generating games failing when using Python 3.11 and the random starting character
+  option.
+- Fix player name being passed as the password field when connecting to the server.
+
+### Changed
+- Use `self.random` when generating games instead of `self.multiworld.random`, to match
+  new Archipelago API changes.
+
 ## [0.0.1]
 
 ### Added
