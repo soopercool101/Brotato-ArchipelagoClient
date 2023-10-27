@@ -14,7 +14,7 @@ class ItemRarity(Enum):
     LEGENDARY = "Legendary"
 
 
-CHARACTERS = {
+CHARACTERS = (
     "Well Rounded",
     "Brawler",
     "Crazy",
@@ -59,10 +59,10 @@ CHARACTERS = {
     "Masochist",
     "Knight",
     "Demon",
-}
+)
 
-DEFAULT_CHARACTERS = {"Well Rounded", "Brawler", "Crazy", "Ranger", "Mage"}
-UNLOCKABLE_CHARACTERS = CHARACTERS - DEFAULT_CHARACTERS
+DEFAULT_CHARACTERS = ("Well Rounded", "Brawler", "Crazy", "Ranger", "Mage")
+UNLOCKABLE_CHARACTERS = tuple(set(CHARACTERS) - set(DEFAULT_CHARACTERS))
 
 MAX_REQUIRED_RUN_WINS = 50
 
