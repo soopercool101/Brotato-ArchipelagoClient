@@ -1,0 +1,35 @@
+Less checks if shorter game, ex. 1 win needed.
+    Maybe also set waves per check to 20?
+
+Should gold/XP only be for one run or the one they're received in?
+
+Balance Lucky? It's too easy to get crates on them.
+
+Balance Alien? Make sure their XP modifier isn't applied, might be too much.
+
+Add minimum difficulty option.
+
+Should crates still spawn after you get all your locations?
+
+Jack of all trades interaction?
+
+Disable endless
+
+Weights for the filler items
+
+Game freezes on /collect and /release
+
+Resuming a run, do checks work as intended?
+
+Connect to nonexistant server should timeout
+
+Handle connection refused
+
+Can we give all crate drops
+
+Connection drops when paused
+
+Save connection details used previously
+
+Use Options DataClass: https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/options%20api.md#option-creation
+    Maybe wait until Archipelago is more ready.
