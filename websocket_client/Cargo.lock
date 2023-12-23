@@ -444,6 +444,7 @@ dependencies = [
  "libc",
  "once_cell",
  "parking_lot",
+ "serde",
 ]
 
 [[package]]
@@ -1309,6 +1310,7 @@ dependencies = [
  "archipelago_rs",
  "futures",
  "gdnative",
+ "serde_json",
  "tokio",
 ]
 

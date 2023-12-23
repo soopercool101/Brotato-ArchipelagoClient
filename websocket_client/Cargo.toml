@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 archipelago_rs = { git = "https://github.com/ryanisaacg/archipelago_rs.git", rev = "da97d068c289d5aec898d61abad05d7c361632f1" }
-gdnative = { version = "0.10", features = ["async"] }
-tokio = { version = "1.33", features = ["rt"] }
+gdnative = { version = "0.10", features = ["async", "serde"] }
+tokio = { version = "1.33", features = ["rt", "sync"] }
 futures = "0.3.29"
+serde_json = "1.0.108"
