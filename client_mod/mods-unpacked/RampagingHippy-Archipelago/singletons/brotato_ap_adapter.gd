@@ -6,12 +6,17 @@ const LOG_NAME = "RampagingHippy-Archipelago/Brotato Client"
 onready var websocket_client
 
 const constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
-var constants
+const factory_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/native/godot_archipelago_client_factory.gdns")
 const GAME: String = "Brotato"
 const DataPackage = preload("./data_package.gd")
+
+# var constants
 export var player: String
 export var password: String
 
+var constants = constants_namespace.new()
+var ap_client_factory = factory_namespace.new()
+var ap_client
 var game_data = ApGameData.new()
 var run_data = ApRunData.new()
 var wave_data = ApWaveData.new()
@@ -87,12 +92,12 @@ signal legendary_crate_drop_status_changed(can_drop_ap_legendary_consumables)
 signal on_connection_refused(reasons)
 
 func _init(websocket_client_):
-	constants = constants_namespace.new()
 	self.websocket_client = websocket_client_
 	var _success = websocket_client.connect("connection_state_changed", self, "_on_connection_state_changed")
-	ModLoaderLog.debug("Brotato AP adapter initialized", LOG_NAME)
+	ModLoaderLog.debug("Brotato AP adapter initialized, pid is %d" % [OS.get_process_id()], LOG_NAME)
 
 func _ready():
+	ap_client_factory.boop()
 	var _status: int
 	_status = websocket_client.connect("on_room_info", self, "_on_room_info")
 	_status = websocket_client.connect("on_connected", self, "_on_connected")
@@ -221,6 +226,12 @@ func run_complete_received():
 		self.game_data.goal_completed = true
 		# 30 = ApClientService.ClientStatus.CLIENT_GOAL
 		websocket_client.status_update(30)
+
+# Connection management
+func connect_to_multiworld(url: String, player: String, password: String):
+	var client = self.ap_client_factory.create_client(url)
+	client.connect(GAME, player, password, 0b111, [])
+	self.client = client
 
 # WebSocket Command received handlers
 func _on_room_info(_room_info):

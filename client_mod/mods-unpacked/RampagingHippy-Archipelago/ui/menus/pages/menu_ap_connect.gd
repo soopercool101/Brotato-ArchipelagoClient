@@ -70,11 +70,11 @@ func _on_connection_refused(reasons: Array):
 
 func _on_ConnectButton_pressed():
 	var server_info = _host_edit.text.rsplit(":", false, 1)
-	var server = server_info[0]
-	var port = int(server_info[1])
-	brotato_client.player = _player_edit.text
-	brotato_client.password = _password_edit.text
-	ap_client.connect_to_multiworld(server, port)
+#	var server = server_info[0]
+#	var port = int(server_info[1])
+#	brotato_client.player = _player_edit.text
+#	brotato_client.password = _password_edit.text
+	brotato_client.connect_to_multiworld(_host_edit.text, _player_edit.text, _password_edit.text)
 
 
 func _on_BackButton_pressed():
