@@ -1,0 +1,7 @@
+Things to check:
+    Resuming a run, do checks work as intended?
+    Connect to nonexistant server should timeout
+    Handle connection refused
+    Can we give all crate drops
+    Connection drops when paused
+    Save connection details used previously
