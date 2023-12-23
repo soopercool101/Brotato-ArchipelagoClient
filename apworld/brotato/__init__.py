@@ -5,7 +5,7 @@ from BaseClasses import MultiWorld, Tutorial
 from worlds.AutoWorld import WebWorld, World
 
 from . import Options
-from .Constants import CHARACTERS, DEFAULT_CHARACTERS, MAX_SHOP_SLOTS, NUM_WAVES
+from .Constants import CHARACTERS, DEFAULT_CHARACTERS, MAX_SHOP_SLOTS, NUM_WAVES, UNLOCKABLE_CHARACTERS
 from .Items import (
     BrotatoItem,
     ItemName,
@@ -78,10 +78,10 @@ class BrotatoWorld(World):
         self.waves_with_checks = list(range(0, NUM_WAVES + 1, waves_per_drop))[1:]
         character_option = self._get_option_value("starting_characters")
         if character_option == 0:  # Default
-            self._starting_characters = list(DEFAULT_CHARACTERS)
+            self._starting_characters = DEFAULT_CHARACTERS
         else:
             num_starting_characters = self._get_option_value("num_starting_characters")
-            self._starting_characters = self.random.sample(CHARACTERS, num_starting_characters)
+            self._starting_characters = self.multiworld.random.sample(CHARACTERS, num_starting_characters)
 
     def set_rules(self):
         num_required_victories = self._get_option_value("num_victories")
@@ -149,7 +149,7 @@ class BrotatoWorld(World):
         pass
 
     def get_filler_item_name(self):
-        return self.random.choice(self._filler_items)
+        return self.multiworld.random.choice(self._filler_items)
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
