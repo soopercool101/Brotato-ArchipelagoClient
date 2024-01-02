@@ -88,7 +88,7 @@ signal legendary_crate_drop_status_changed(can_drop_ap_legendary_consumables)
 signal on_connection_refused(reasons)
 
 func _init(websocket_client_):
-	constants = constants_namespace.new()
+	constants = _constants_namespace.new()
 	self.websocket_client = websocket_client_
 	var _success = websocket_client.connect("connection_state_changed", self, "_on_connection_state_changed")
 	ModLoaderLog.debug("Brotato AP adapter initialized", LOG_NAME)
