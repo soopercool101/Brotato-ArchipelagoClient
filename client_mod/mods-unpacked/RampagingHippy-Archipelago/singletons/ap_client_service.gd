@@ -3,8 +3,12 @@ class_name ApClientService
 # Hard-code mod name to avoid cyclical dependency
 var LOG_NAME = "RampagingHippy-Archipelago/AP Client"
 
+# The client handles connecting to the server, and the peer handles sending/receiving
+# data after connecting. We set the peer in the "_on_connection_established" callback,
+# and clear it in the "_on_connection_closed" callback.
 var _client = WebSocketClient.new()
 var _peer: WebSocketPeer
+var _url: String
 
 enum State {
 	STATE_CONNECTING = 0
@@ -15,7 +19,6 @@ enum State {
 signal connection_state_changed
 
 var connection_state = State.STATE_CLOSED
-
 
 enum ClientStatus {
 ## This is the Client States enum as documented in AP->network protocol
@@ -49,24 +52,25 @@ func _ready():
 	_client.connect("connection_error", self, "_on_connection_error")
 	_client.connect("connection_established", self, "_connected")
 	_client.connect("data_received", self, "_on_data")
-	# Make sure that pausing the game doesn't stop out WebSocket connection
-	pause_mode = Node.PAUSE_MODE_PROCESS
-	set_process(false)
-
+	# Increase max buffer size to accommodate larger payloads. The defaults are:
+	#   - Max in/out buffer = 64 KB
+	#   - Max in/out packets = 1024 
+	# We increase the in buffer to 256 KB because some messages we receive are too large
+	# for 64. The other defaults are fine though.
+	_client.set_buffers(256, 1024, 64, 1024)
+	
 # Public API
-
-func connect_to_multiworld(server: String, port: int):
+func connect_to_multiworld(multiworld_url: String):
 	if connection_state == State.STATE_OPEN:
 		return
 	_set_connection_state(State.STATE_CONNECTING)
-	# TODO: WS fallback?
-	var url = "wss://%s:%d" % [server, port]
+	# Try to connect with SSL first. If this doesn't work then the _on_connection_error
+	# callback will try again without SSL.
+	url = "wss://%s" % multiworld_url
 	ModLoaderLog.info("Connecting to %s" % url, LOG_NAME)
-	var err = _client.connect_to_url(url)
-	ModLoaderLog.info("Connect Results: " + str(err), LOG_NAME)
+	var err = _client.connect_to_url(self.url)
 	if not err:
-		_peer = _client.get_peer(1)
-		_peer.set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)
+		# Start processing to poll the connection for data
 		set_process(true)
 
 func connected_to_multiworld() -> bool:
@@ -91,7 +95,6 @@ func send_connect(game: String, user: String, password: String = "", slot_data: 
 		"slot_data": slot_data
 	})
 
-
 func send_sync():
 	_send_command({"cmd": "Sync"})
 
@@ -110,7 +113,6 @@ func send_location_scouts(locations: Array, create_as_int: int):
 		"locations": locations,
 		"create_as_int": create_as_int
 	})
-
 
 func status_update(status: int):
 	_send_command({
@@ -178,12 +180,22 @@ func _closed(was_clean = false):
 
 func _connected(proto = ""):
 	_set_connection_state(State.STATE_OPEN)
-	ModLoaderLog.info("AP connection opened with protocol: %s" % proto, LOG_NAME)
+	_peer = _client.get_peer(1)
+	_peer.set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)
+	ModLoaderLog.info("Connected to multiworld %s." % url, LOG_NAME)
 
 func _on_connection_error():
-	_set_connection_state(State.STATE_CLOSED)
-	ModLoaderLog.info("Failed to connect to AP server", LOG_NAME)
-
+	if url.begins_with("wss://"):
+		# We don't have any info on why the connection failed, so we assume it wsa
+		# because the server doesn't support SSL. So, try connecting using "ws://"
+		# instead.
+		ModLoaderLog.debug("Connecting to multiworld %s failed, trying again using 'ws://'." % url, LOG_NAME)
+		url = url.replace("wss://", "ws://")
+		_client.connect_to_url(url)
+	else:
+		# Tried both options, error out now
+		_set_connection_state(State.STATE_CLOSED)
+		ModLoaderLog.info("Failed to connect to multiworld %s." % url, LOG_NAME)
 
 func _set_connection_state(state):
 	ModLoaderLog.info("AP connection state changed to: %d" % state, LOG_NAME)
@@ -195,6 +207,7 @@ func _on_data():
 	var received_data = JSON.parse(received_data_str)
 	if received_data.result == null:
 		ModLoaderLog.error("Failed to parse JSON for %s" % received_data_str, LOG_NAME)
+		return
 #	ModLoaderLog.debug_json_print("Got data from server", received_data_str, LOG_NAME)
 #	ModLoaderLog.debug_json_print("It became", received_data.result[0], LOG_NAME)
 	for command in received_data.result:
