@@ -43,15 +43,12 @@ signal on_invalid_packet
 signal on_retrieved
 signal on_set_reply
 
-func _init():
-	pass
-
 func _ready():
 	# Connect base signals to get notified of connection open, close, and errors.
-	_client.connect("connection_closed", self, "_closed")
+	_client.connect("connection_closed", self, "_on_connection_closed")
 	_client.connect("connection_error", self, "_on_connection_error")
-	_client.connect("connection_established", self, "_connected")
-	_client.connect("data_received", self, "_on_data")
+	_client.connect("connection_established", self, "_on_connection_established")
+	_client.connect("data_received", self, "_on_data_received")
 	# Increase max buffer size to accommodate larger payloads. The defaults are:
 	#   - Max in/out buffer = 64 KB
 	#   - Max in/out packets = 1024 
@@ -66,9 +63,9 @@ func connect_to_multiworld(multiworld_url: String):
 	_set_connection_state(State.STATE_CONNECTING)
 	# Try to connect with SSL first. If this doesn't work then the _on_connection_error
 	# callback will try again without SSL.
-	url = "wss://%s" % multiworld_url
-	ModLoaderLog.info("Connecting to %s" % url, LOG_NAME)
-	var err = _client.connect_to_url(self.url)
+	_url = "wss://%s" % multiworld_url
+	ModLoaderLog.info("Connecting to %s" % _url, LOG_NAME)
+	var err = _client.connect_to_url(_url)
 	if not err:
 		# Start processing to poll the connection for data
 		set_process(true)
@@ -166,53 +163,52 @@ func set_notify(keys: Array):
 		"keys": keys,
 	})
 
-# Websocket callbacks
+# WebsocketClient callbacks
 func _send_command(args: Dictionary):
 	ModLoaderLog.info("Sending %s command" % args["cmd"], LOG_NAME)
 	var command_str = JSON.print([args])
 	var _result = _peer.put_packet(command_str.to_ascii())
 
-func _closed(was_clean = false):
+func _on_connection_closed(was_clean = false):
 	_set_connection_state(State.STATE_CLOSED)
 	ModLoaderLog.info("AP connection closed, clean: %s" % was_clean, LOG_NAME)
 	_peer = null
 	set_process(false)
 
-func _connected(proto = ""):
+func _on_connection_established(proto = ""):
 	_set_connection_state(State.STATE_OPEN)
 	_peer = _client.get_peer(1)
 	_peer.set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)
-	ModLoaderLog.info("Connected to multiworld %s." % url, LOG_NAME)
+	ModLoaderLog.info("Connected to multiworld %s." % _url, LOG_NAME)
 
 func _on_connection_error():
-	if url.begins_with("wss://"):
+	if _url.begins_with("wss://"):
 		# We don't have any info on why the connection failed, so we assume it wsa
 		# because the server doesn't support SSL. So, try connecting using "ws://"
 		# instead.
-		ModLoaderLog.debug("Connecting to multiworld %s failed, trying again using 'ws://'." % url, LOG_NAME)
-		url = url.replace("wss://", "ws://")
-		_client.connect_to_url(url)
+		ModLoaderLog.debug("Connecting to multiworld %s failed, trying again using 'ws://'." % _url, LOG_NAME)
+		_url = _url.replace("wss://", "ws://")
+		_client.connect_to_url(_url)
 	else:
 		# Tried both options, error out now
 		_set_connection_state(State.STATE_CLOSED)
-		ModLoaderLog.info("Failed to connect to multiworld %s." % url, LOG_NAME)
+		ModLoaderLog.info("Failed to connect to multiworld %s." % _url, LOG_NAME)
 
-func _set_connection_state(state):
-	ModLoaderLog.info("AP connection state changed to: %d" % state, LOG_NAME)
-	connection_state = state
-	emit_signal("connection_state_changed", connection_state)
-
-func _on_data():
+func _on_data_received():
 	var received_data_str = _peer.get_packet().get_string_from_utf8()
 	var received_data = JSON.parse(received_data_str)
 	if received_data.result == null:
 		ModLoaderLog.error("Failed to parse JSON for %s" % received_data_str, LOG_NAME)
 		return
-#	ModLoaderLog.debug_json_print("Got data from server", received_data_str, LOG_NAME)
-#	ModLoaderLog.debug_json_print("It became", received_data.result[0], LOG_NAME)
 	for command in received_data.result:
 		_handle_command(command)
-	
+
+# Internal plumbing
+func _set_connection_state(state):
+	ModLoaderLog.info("AP connection state changed to: %d" % state, LOG_NAME)
+	connection_state = state
+	emit_signal("connection_state_changed", connection_state)
+
 func _handle_command(command: Dictionary):
 	match command["cmd"]:
 		"RoomInfo":
@@ -255,4 +251,5 @@ func _handle_command(command: Dictionary):
 			ModLoaderLog.warning("Received Unknown Command %s" % command["cmd"], LOG_NAME)
 
 func _process(_delta):
+	# Only run when the connection the the server is not closed.
 	_client.poll()
