@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import logging
 from typing import Any, Sequence
 
 from BaseClasses import MultiWorld, Tutorial
 from worlds.AutoWorld import WebWorld, World
 
-from . import Options
-from .Constants import CHARACTERS, DEFAULT_CHARACTERS, MAX_SHOP_SLOTS, NUM_WAVES, UNLOCKABLE_CHARACTERS
+from .Options import BrotatoOptions
+from .Constants import CHARACTERS, DEFAULT_CHARACTERS, MAX_SHOP_SLOTS, NUM_WAVES
 from .Items import (
     BrotatoItem,
     ItemName,
@@ -43,7 +45,8 @@ class BrotatoWorld(World):
     and items to create unique builds and survive until help arrives.
     """
 
-    option_definitions = Options.options
+    options_dataclass = BrotatoOptions
+    options: BrotatoOptions
     game = "Brotato"
     web = BrotatoWeb()
     data_version = 0
@@ -53,7 +56,7 @@ class BrotatoWorld(World):
     item_name_groups = item_name_groups
 
     _filler_items = filler_items
-    _starting_characters: list[str]
+    _starting_characters: Sequence[str]
 
     location_name_to_id = location_name_to_id
     location_name_groups = location_name_groups
@@ -73,10 +76,10 @@ class BrotatoWorld(World):
         return item_table[self.item_name_to_id[name]].to_item(self.player)
 
     def generate_early(self):
-        waves_per_drop = self._get_option_value("waves_per_drop")
+        waves_per_drop = self.options.waves_per_drop.value
         # Ignore 0 value, but choosing a different start gives the wrong wave results
         self.waves_with_checks = list(range(0, NUM_WAVES + 1, waves_per_drop))[1:]
-        character_option = self._get_option_value("starting_characters")
+        character_option = self.options.starting_characters.value
         if character_option == 0:  # Default
             self._starting_characters = DEFAULT_CHARACTERS
         else:
@@ -84,7 +87,7 @@ class BrotatoWorld(World):
             self._starting_characters = self.multiworld.random.sample(CHARACTERS, num_starting_characters)
 
     def set_rules(self):
-        num_required_victories = self._get_option_value("num_victories")
+        num_required_victories = self.options.num_victories.value
         self.multiworld.completion_condition[self.player] = lambda state: BrotatoLogic._brotato_has_run_wins(
             state, self.player, count=num_required_victories
         )
@@ -101,28 +104,28 @@ class BrotatoWorld(World):
         item_names += [c for c in item_name_groups["Characters"] if c not in self._starting_characters]
 
         # Add an item to receive for each crate drop location, as backfill
-        num_common_crate_drops = self._get_option_value("num_common_crate_drops")
+        num_common_crate_drops = self.options.num_common_crate_drops.value
         for _ in range(num_common_crate_drops):
             # TODO: Can be any item rarity, but need to choose a ratio. Check wiki for rates?
             item_names.append(ItemName.COMMON_ITEM)
 
-        num_legendary_crate_drops = self._get_option_value("num_legendary_crate_drops")
+        num_legendary_crate_drops = self.options.num_legendary_crate_drops.value
         for _ in range(num_legendary_crate_drops):
             item_names.append(ItemName.LEGENDARY_ITEM)
 
-        num_common_upgrades = self._get_option_value("num_common_upgrades")
+        num_common_upgrades = self.options.num_common_upgrades.value
         item_names += [ItemName.COMMON_UPGRADE] * num_common_upgrades
 
-        num_uncommon_upgrades = self._get_option_value("num_uncommon_upgrades")
+        num_uncommon_upgrades = self.options.num_uncommon_upgrades.value
         item_names += [ItemName.UNCOMMON_UPGRADE] * num_uncommon_upgrades
 
-        num_rare_upgrades = self._get_option_value("num_rare_upgrades")
+        num_rare_upgrades = self.options.num_rare_upgrades.value
         item_names += [ItemName.RARE_UPGRADE] * num_rare_upgrades
 
-        num_legendary_upgrades = self._get_option_value("num_legendary_upgrades")
+        num_legendary_upgrades = self.options.num_legendary_upgrades.value
         item_names += [ItemName.LEGENDARY_UPGRADE] * num_legendary_upgrades
 
-        num_starting_shop_slots = self._get_option_value("num_starting_shop_slots")
+        num_starting_shop_slots = self.options.num_starting_shop_slots.value
         num_shop_slot_items = max(MAX_SHOP_SLOTS - num_starting_shop_slots, 0)
         item_names += [ItemName.SHOP_SLOT] * num_shop_slot_items
 
@@ -154,8 +157,8 @@ class BrotatoWorld(World):
     def fill_slot_data(self) -> dict[str, Any]:
         return {
             "waves_with_checks": self.waves_with_checks,
-            "num_wins_needed": int(self._get_option_value("num_victories")),
-            "num_consumables": int(self._get_option_value("num_common_crate_drops")),
-            "num_starting_shop_slots": int(self._get_option_value("num_starting_shop_slots")),
-            "num_legendary_consumables": int(self._get_option_value("num_legendary_crate_drops")),
+            "num_wins_needed": self.options.num_victories.value,
+            "num_consumables": self.options.num_common_crate_drops.value,
+            "num_starting_shop_slots": self.options.num_starting_shop_slots.value,
+            "num_legendary_consumables": self.options.num_legendary_crate_drops.value,
         }

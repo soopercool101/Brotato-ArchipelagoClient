@@ -5,8 +5,8 @@ const LOG_NAME = "RampagingHippy-Archipelago/Brotato Client"
 
 onready var websocket_client
 
-const constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
-const factory_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/native/godot_archipelago_client_factory.gdns")
+const _constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
+const _factory_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/native/godot_archipelago_client_factory.gdns")
 const GAME: String = "Brotato"
 const DataPackage = preload("./data_package.gd")
 
@@ -14,8 +14,8 @@ const DataPackage = preload("./data_package.gd")
 export var player: String
 export var password: String
 
-var constants = constants_namespace.new()
-var ap_client_factory = factory_namespace.new()
+var constants = _constants_namespace.new()
+var ap_client_factory = _factory_namespace.new()
 var ap_client
 var game_data = ApGameData.new()
 var run_data = ApRunData.new()
@@ -57,7 +57,7 @@ class ApGameData:
 	var num_wins: int = 0
 
 	func _init():
-		for character in constants_namespace.new().CHARACTER_NAME_TO_ID:
+		for character in _constants_namespace.new().CHARACTER_NAME_TO_ID:
 			character_progress[character] = ApCharacterProgress.new()
 			received_characters[character] = false
 
