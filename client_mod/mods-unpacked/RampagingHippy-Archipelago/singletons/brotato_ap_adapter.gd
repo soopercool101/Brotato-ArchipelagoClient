@@ -5,13 +5,14 @@ const LOG_NAME = "RampagingHippy-Archipelago/Brotato Client"
 
 onready var websocket_client
 
-const constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
-var constants
+const _constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
 const GAME: String = "Brotato"
 const DataPackage = preload("./data_package.gd")
+
 export var player: String
 export var password: String
 
+var constants = _constants_namespace.new()
 var game_data = ApGameData.new()
 var run_data = ApRunData.new()
 var wave_data = ApWaveData.new()
@@ -52,7 +53,7 @@ class ApGameData:
 	var num_wins: int = 0
 
 	func _init():
-		for character in constants_namespace.new().CHARACTER_NAME_TO_ID:
+		for character in _constants_namespace.new().CHARACTER_NAME_TO_ID:
 			character_progress[character] = ApCharacterProgress.new()
 			received_characters[character] = false
 
@@ -87,7 +88,7 @@ signal legendary_crate_drop_status_changed(can_drop_ap_legendary_consumables)
 signal on_connection_refused(reasons)
 
 func _init(websocket_client_):
-	constants = constants_namespace.new()
+	constants = _constants_namespace.new()
 	self.websocket_client = websocket_client_
 	var _success = websocket_client.connect("connection_state_changed", self, "_on_connection_state_changed")
 	ModLoaderLog.debug("Brotato AP adapter initialized", LOG_NAME)
