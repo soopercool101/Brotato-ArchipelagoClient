@@ -7,6 +7,7 @@ onready var websocket_client
 
 const _constants_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/singletons/constants.gd")
 const _factory_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/native/godot_archipelago_client_factory.gdns")
+const _async_executor_driver_namespace = preload("res://mods-unpacked/RampagingHippy-Archipelago/native/async_executor_driver.gdns")
 const GAME: String = "Brotato"
 const DataPackage = preload("./data_package.gd")
 
@@ -92,12 +93,13 @@ signal legendary_crate_drop_status_changed(can_drop_ap_legendary_consumables)
 signal on_connection_refused(reasons)
 
 func _init(websocket_client_):
+	var async_executor_driver = _async_executor_driver_namespace.new()
+	self.add_child(async_executor_driver)
 	self.websocket_client = websocket_client_
 	var _success = websocket_client.connect("connection_state_changed", self, "_on_connection_state_changed")
 	ModLoaderLog.debug("Brotato AP adapter initialized, pid is %d" % [OS.get_process_id()], LOG_NAME)
 
 func _ready():
-	ap_client_factory.boop()
 	var _status: int
 	_status = websocket_client.connect("on_room_info", self, "_on_room_info")
 	_status = websocket_client.connect("on_connected", self, "_on_connected")
@@ -228,10 +230,19 @@ func run_complete_received():
 		websocket_client.status_update(30)
 
 # Connection management
-func connect_to_multiworld(url: String, player: String, password: String):
-	var client = self.ap_client_factory.create_client(url)
-	client.connect(GAME, player, password, 0b111, [])
-	self.client = client
+func connect_to_multiworld(url: String):
+	# create_client is a Rust "async fn", so we need to yield until it's completed.
+	var create_client_state = self.ap_client_factory.create_client(url)
+	# Output is a Rust "Result<GodotArchipelagoClient, ArchipelagoError>"
+	# Which is converted to a dict with one key, either "Ok" or "Err"
+	var client_result: Dictionary = yield(create_client_state, "completed")
+	if client_result.has("Ok"):
+		self.ap_client = client_result["Ok"]
+	else:
+		var connect_error = client_result["Err"]
+		ModLoaderLog.error("Failed to connect: %s" % connect_error, LOG_NAME)
+		return
+	self.ap_client.connect_to_multiworld(GAME, self.player, self.password, 0b111, [])
 
 # WebSocket Command received handlers
 func _on_room_info(_room_info):
@@ -323,3 +334,9 @@ func _on_data_package(received_data_package):
 	var data_package_info = received_data_package["data"]["games"][GAME]
 	_data_package = DataPackage.BrotatoDataPackage.from_data_package(data_package_info)
 	websocket_client.send_connect(GAME, player, password)
+
+func _process(delta):
+	if self.ap_client:
+		var received_messages = self.ap_client.get_received_messages()
+		if received_messages.size() > 0:
+			ModLoaderLog.info("Got %d received messages!" % received_messages.size(), LOG_NAME)

@@ -72,7 +72,8 @@ func _on_ConnectButton_pressed():
 	var url = _host_edit.text
 	brotato_client.player = _player_edit.text
 	brotato_client.password = _password_edit.text
-	ap_client.connect_to_multiworld(url)
+	brotato_client.connect_to_multiworld(url)
+	# ap_client.connect_to_multiworld(url)
 
 
 func _on_BackButton_pressed():
