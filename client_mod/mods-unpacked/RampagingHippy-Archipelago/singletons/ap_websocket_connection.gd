@@ -1,5 +1,5 @@
 extends Node
-class_name ApClientService
+class_name ApWebSocketConnection
 # Hard-code mod name to avoid cyclical dependency
 var LOG_NAME = "RampagingHippy-Archipelago/AP Client"
 
@@ -55,6 +55,9 @@ func _ready():
 	# We increase the in buffer to 256 KB because some messages we receive are too large
 	# for 64. The other defaults are fine though.
 	_client.set_buffers(256, 1024, 64, 1024)
+	
+	# Always process so we don't disconnect if the game is paused for too long.
+	pause_mode = Node.PAUSE_MODE_PROCESS
 	
 # Public API
 func connect_to_multiworld(multiworld_url: String):
@@ -175,7 +178,7 @@ func _on_connection_closed(was_clean = false):
 	_peer = null
 	set_process(false)
 
-func _on_connection_established(proto = ""):
+func _on_connection_established(_proto = ""):
 	_set_connection_state(State.STATE_OPEN)
 	_peer = _client.get_peer(1)
 	_peer.set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)

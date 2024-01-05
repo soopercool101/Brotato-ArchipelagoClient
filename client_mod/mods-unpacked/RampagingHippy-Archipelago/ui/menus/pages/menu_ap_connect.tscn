@@ -62,6 +62,7 @@ margin_right = 738.0
 margin_bottom = 133.0
 focus_next = NodePath("../PasswordEdit")
 focus_previous = NodePath("../HostEdit")
+text = ""
 clear_button_enabled = true
 placeholder_text = "Player Name"
 caret_blink = true
