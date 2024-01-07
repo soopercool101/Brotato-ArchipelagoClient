@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from Options import PerGameCommonOptions, Range, TextChoice
+from Options import DeathLink, PerGameCommonOptions, Range, TextChoice
 
 from .Constants import (
     MAX_COMMON_UPGRADES,
@@ -163,3 +163,4 @@ class BrotatoOptions(PerGameCommonOptions):
     num_legendary_upgrades: NumberLegendaryUpgrades
     num_starting_shop_slots: StartingShopSlots
     num_shop_items: NumberShopItems
+    death_link: DeathLink

@@ -157,4 +157,5 @@ class BrotatoWorld(World):
             "num_consumables": self.options.num_common_crate_drops.value,
             "num_starting_shop_slots": self.options.num_starting_shop_slots.value,
             "num_legendary_consumables": self.options.num_legendary_crate_drops.value,
+            "death_link": self.options.death_link.value,
         }
