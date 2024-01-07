@@ -220,6 +220,10 @@ func _on_connected(command):
 			var wave_number = character_wave_complete[0]
 			var wave_character = character_wave_complete[1]
 			game_state.character_progress[wave_character].reached_check_wave[wave_number] = true
+
+	if slot_data["death_link"] != 0:
+		websocket_client.send_connect_update(null, ["DeathLink"])
+	
 		
 func _on_received_items(command):
 	var items = command["items"]
