@@ -84,8 +84,8 @@ func disconnect_from_multiworld():
 
 func send_connect(game: String, user: String, password: String = "", slot_data: bool = true):
 	_send_command({
-		"cmd": "Connect", 
-		"game": game, 
+		"cmd": "Connect",
+		"game": game,
 		"name": user,
 		"password": password,
 		"uuid": "Godot %s: %s" % [game, user], # TODO: What do we need here? We can't generate an actual UUID in 3.5
@@ -94,6 +94,14 @@ func send_connect(game: String, user: String, password: String = "", slot_data: 
 		"tags": [],
 		"slot_data": slot_data
 	})
+
+func send_connect_update(items_handling = null, tags = null):
+	var command_args = {"cmd": "ConnectUpdate"}
+	if items_handling != null:
+		command_args["items_handling"] = items_handling
+	if tags != null:
+		command_args["tags"] = tags
+	_send_command(command_args)
 
 func send_sync():
 	_send_command({"cmd": "Sync"})
@@ -212,7 +220,7 @@ func _set_connection_state(state):
 	connection_state = state
 	emit_signal("connection_state_changed", connection_state)
 
-func _handle_command(command: Dictionary):
+func _handle_command(command: Dictionary):	
 	match command["cmd"]:
 		"RoomInfo":
 			ModLoaderLog.debug("Received RoomInfo cmd.", LOG_NAME)
