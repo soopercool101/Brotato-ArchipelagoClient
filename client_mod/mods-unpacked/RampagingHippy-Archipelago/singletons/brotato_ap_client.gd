@@ -1,19 +1,22 @@
 extends Node
-class_name BrotatoApAdapter
+class_name BrotatoApClient
 
 const LOG_NAME = "RampagingHippy-Archipelago/Brotato Client"
 
+const _constants_namespace = preload("./constants.gd")
+const _game_state_namespace = preload("../progress/game_state.gd")
+const GAME: String = "Brotato"
+
 onready var websocket_client
 
-const _constants_namespace = preload("./constants.gd")
-const GAME: String = "Brotato"
+
 const DataPackage = preload("./data_package.gd")
 
 export var player: String
 export var password: String
 
 var constants = _constants_namespace.new()
-var game_state: ApGameState
+var game_state
 
 var _data_package: DataPackage.BrotatoDataPackage
 
@@ -188,7 +191,7 @@ func _on_connected(command):
 
 	# Get options and other info from the slot data
 	var slot_data = command["slot_data"]
-	game_state = ApGameState.new(
+	game_state = _game_state_namespace.new(
 		slot_data["num_wins_needed"],
 		slot_data["num_consumables"],
 		slot_data["num_legendary_consumables"],

@@ -20,7 +20,6 @@ func _ensure_ap_client():
 
 func _add_character(character_name: String):
 	var character_id = _ap_client.constants.CHARACTER_NAME_TO_ID[character_name]
-	ModLoaderLog.debug("Unlocking character %s" % character_id, LOG_NAME)
 	_unlocked_characters.append(character_id)
 
 func _on_character_received(character: String):
@@ -30,6 +29,9 @@ func get_elements_unlocked() -> Array:
 	ModLoaderLog.debug("Getting unlocked characters", LOG_NAME)
 	_ensure_ap_client()
 	if _ap_client.connected_to_multiworld():
+		var character_str = ", ".join(_unlocked_characters)
+		ModLoaderLog.debug("Unlocking characters %s" % character_str, LOG_NAME)
 		return _unlocked_characters
 	else:
+		ModLoaderLog.debug("Returning default characters", LOG_NAME)
 		return .get_elements_unlocked()

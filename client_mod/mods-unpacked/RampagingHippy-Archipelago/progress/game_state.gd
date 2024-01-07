@@ -13,6 +13,7 @@ class ApCharacterProgress:
 	# exact number of waves depends on game settings.
 	var reached_check_wave: Dictionary = {}
 
+const _run_state_namespace = preload("./run_state.gd")
 const _constants_namespace = preload("../singletons/constants.gd")
 var constants = _constants_namespace.new()
 
@@ -46,7 +47,7 @@ var received_upgrades_by_tier: Dictionary = {
 }
 
 # Data to track when in a run (i.e. actually playing the game).
-var run_state: ApRunState
+var run_state
 
 func _init(
 	num_wins_needed_: int, 
@@ -91,7 +92,7 @@ func legendary_consumable_picked_up():
 	run_state.ap_legendary_consumables_not_picked_up -= 1
 
 func run_started():
-	run_state = ApRunState.new()
+	run_state = _run_state_namespace.new()
 
 func wave_started():
 	run_state.wave_started()
