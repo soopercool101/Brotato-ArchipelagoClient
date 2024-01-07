@@ -1,3 +1,4 @@
 [tool.ruff]
 # From Archipelago's style guide
 line-length = 120
+target-version = "py38"

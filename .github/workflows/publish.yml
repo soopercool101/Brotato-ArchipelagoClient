@@ -27,7 +27,7 @@ jobs:
 
       - name: Zip client mod
         working-directory: ./client_mod
-        run: zip -r ../RampagingHippy-Archipelago.zip *
+        run: zip -r ../RampagingHippy-Archipelago.zip * .import/*
 
       - name: Create release
         uses: ncipollo/release-action@v1
