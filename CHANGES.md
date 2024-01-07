@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3]
+
+### Fixed
+- The client mod can now connect to servers hosted both with and without SSL (aka using
+  `wss://` and `ws://`).
+  - The mod will attempt to connect using `wss://` first, then fall back to `ws://` if
+    the first connection fails.
+- Fix an issue where the client mod dropped incoming messages above a certain size (~64
+  KB).
+- Fix the game freezing for several seconds if large amounts of items were received all
+  at once. For example, if the game was released.
+- Random character generation should now work properly on all supported versions of
+  Python (3.8 through 3.11).
+
+### Changed
+- Add several checks to the client mod to check if the game is connected to a
+  MultiServer before doing any Archipelago-specific actions.
+  - This prevents any issues when playing the game with the mod installed, but not
+    connected to a server. i.e. playing in "vanilla" mode.
+- Several internal changes were made to follow updated Archipelago development
+  guidelines and to make the code better organized overall.
+
 ## [0.0.2]
 
 ### Fixed
