@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix consumables not spawning when playing vanilla with the mod installed.
 - Fix character select menu not loading when playing vanilla with the mod installed.
 
+### Changed
+- Change "Legendary Loot Crate <x>" location progress type from `DEFAULT` to `EXCLUDED`.
+  These are too difficult to get for them to hold progression items.
+
 ## [0.0.3]
 
 ### Fixed

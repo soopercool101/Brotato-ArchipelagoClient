@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from itertools import count
 from typing import get_args
 
-from BaseClasses import Location
+from BaseClasses import Location, LocationProgressType
 
 from .Constants import (
     BASE_ID,
@@ -34,6 +34,7 @@ class BrotatoLocationBase:
     name: str
     is_event: bool = False
     id: int = field(init=False)
+    progress_type: LocationProgressType = LocationProgressType.DEFAULT
 
     def __post_init__(self):
         if not self.is_event:
@@ -44,7 +45,9 @@ class BrotatoLocationBase:
         object.__setattr__(self, "id", id_)
 
     def to_location(self, player: int) -> BrotatoLocation:
-        return BrotatoLocation(player, name=self.name, address=self.id)
+        location = BrotatoLocation(player, name=self.name, address=self.id)
+        location.progress_type = self.progress_type
+        return location
 
 
 _wave_count = range(1, NUM_WAVES + 1)
@@ -76,7 +79,9 @@ _normal_item_drop_locs = [
     BrotatoLocationBase(name=CRATE_DROP_LOCATION_TEMPLATE.format(num=i)) for i in range(1, MAX_NORMAL_CRATE_DROPS + 1)
 ]
 _legendary_item_drop_locs = [
-    BrotatoLocationBase(name=LEGENDARY_CRATE_DROP_LOCATION_TEMPLATE.format(num=i))
+    BrotatoLocationBase(
+        name=LEGENDARY_CRATE_DROP_LOCATION_TEMPLATE.format(num=i), progress_type=LocationProgressType.EXCLUDED
+    )
     for i in range(1, MAX_LEGENDARY_CRATE_DROPS + 1)
 ]
 
