@@ -4,7 +4,6 @@ const LOG_NAME = "RampagingHippy-Archipelago/title_screen_menus"
 var _custom_menu_ap_connect
 
 func _ready():
-	var mod_node = get_node("/root/ModLoader/RampagingHippy-Archipelago")
 	_custom_menu_ap_connect = load("res://mods-unpacked/RampagingHippy-Archipelago/ui/menus/pages/menu_ap_connect.tscn").instance()
 	add_child(_custom_menu_ap_connect)
 	_custom_menu_ap_connect.visible = false
