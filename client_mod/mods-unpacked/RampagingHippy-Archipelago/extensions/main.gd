@@ -97,15 +97,16 @@ func _on_ap_upgrade_received(upgrade_tier: int):
 
 # Base overrides
 func spawn_consumables(unit: Unit) -> void:
-	if _ap_client.connected_to_multiworld():
-		var consumable_count_start = _consumables.size()
-		.spawn_consumables(unit)
-		var consumable_count_after = _consumables.size()
-		var spawned_consumable = consumable_count_after > consumable_count_start
-		if spawned_consumable:
-			var spawned_consumable_id = _consumables.back().consumable_data.my_id
-			if spawned_consumable_id == "ap_pickup" or spawned_consumable_id == "ap_legendary_pickup":
-				_ap_client.consumable_spawned()
+	# No reason to check if connected to the multiworld, this is vanilla if
+	# we're not connected since the game should never drop ap_pickups otherwise.
+	var consumable_count_start = _consumables.size()
+	.spawn_consumables(unit)
+	var consumable_count_after = _consumables.size()
+	var spawned_consumable = consumable_count_after > consumable_count_start
+	if spawned_consumable:
+		var spawned_consumable_id = _consumables.back().consumable_data.my_id
+		if spawned_consumable_id == "ap_pickup" or spawned_consumable_id == "ap_legendary_pickup":
+			_ap_client.consumable_spawned()
 
 func on_consumable_picked_up(consumable: Node) -> void:
 	var is_ap_consumable = false
