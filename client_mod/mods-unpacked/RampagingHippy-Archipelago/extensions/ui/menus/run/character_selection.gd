@@ -1,8 +1,8 @@
 extends "res://ui/menus/run/character_selection.gd"
-var _ap_client
 
 const LOG_NAME = "RampagingHippy-Archipelago/character_selection"
 
+var _ap_client
 var _unlocked_characters: Array = []
 
 func _ensure_ap_client():
@@ -13,10 +13,11 @@ func _ensure_ap_client():
 		return
 	var mod_node = get_node("/root/ModLoader/RampagingHippy-Archipelago")
 	_ap_client = mod_node.brotato_ap_client
-	for character in _ap_client.game_state.character_progress:
-		if _ap_client.game_state.character_progress[character].unlocked:
-			_add_character(character)
-	var _status = _ap_client.connect("character_received", self, "_on_character_received")
+	if _ap_client.connected_to_multiworld():
+		for character in _ap_client.game_state.character_progress:
+			if _ap_client.game_state.character_progress[character].unlocked:
+				_add_character(character)
+		var _status = _ap_client.connect("character_received", self, "_on_character_received")
 
 func _add_character(character_name: String):
 	var character_id = _ap_client.constants.CHARACTER_NAME_TO_ID[character_name]
