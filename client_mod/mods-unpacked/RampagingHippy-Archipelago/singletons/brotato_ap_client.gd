@@ -17,6 +17,10 @@ export var password: String
 
 var constants = _constants_namespace.new()
 var game_state
+var deathlink_enabled: bool = false
+# Set when we're trying to kill the player during a DeathLink so we don't send a
+# DeathLink out when it happens.
+var _handling_deathlink: bool = false
 
 var _data_package: DataPackage.BrotatoDataPackage
 
@@ -29,6 +33,10 @@ signal upgrade_received(upgrade_tier)
 signal shop_slot_received(total_slots)
 signal crate_drop_status_changed(can_drop_ap_consumables)
 signal legendary_crate_drop_status_changed(can_drop_ap_legendary_consumables)
+signal deathlink_kill_player()
+
+# Internal signal sent when the player is killed by a DeathLink so we can clear _handling_deathlink
+signal _player_killed_by_deathlink
 
 # Connection issue signals
 signal on_connection_refused(reasons)
@@ -45,6 +53,7 @@ func _ready():
 	_status = websocket_client.connect("on_data_package", self, "_on_data_package")
 	_status = websocket_client.connect("on_received_items", self, "_on_received_items")
 	_status = websocket_client.connect("on_connection_refused", self, "_on_connection_refused")
+	_status = websocket_client.connect("on_bounced", self, "_on_bounced")
 
 func _on_connection_state_changed(new_state: int):\
 	# ApWebSocketConnection.State.STATE_CLOSED, can't use directly because of dynamic imports
@@ -176,6 +185,24 @@ func run_complete_received():
 		# 30 = ApWebSocketConnection.ClientStatus.CLIENT_GOAL
 		websocket_client.status_update(30)
 
+func player_died():
+	### Trigger DeathLink if enabled and the player wasn't just killed by a DeathLink
+	### themselves.
+	if deathlink_enabled and not _handling_deathlink:
+		websocket_client.bounce(
+			[],
+			[],
+			["DeathLink"],
+			{
+				"time": Time.get_unix_time_from_system(),
+				"cause": "",
+				"source": player
+			}
+		)
+	elif _handling_deathlink:
+			ModLoaderLog.debug("Died to DeathLink, clearing _handling_deathlink.", LOG_NAME)
+			_handling_deathlink = false
+
 # WebSocket Command received handlers
 func _on_room_info(_room_info):
 	websocket_client.get_data_package(["Brotato"])
@@ -222,9 +249,9 @@ func _on_connected(command):
 			game_state.character_progress[wave_character].reached_check_wave[wave_number] = true
 
 	if slot_data["death_link"] != 0:
+		deathlink_enabled = true
 		websocket_client.send_connect_update(null, ["DeathLink"])
 	
-		
 func _on_received_items(command):
 	var items = command["items"]
 	# NOTE: We used to have some debug logs in each if/elif branch to say what item(s)
@@ -266,3 +293,16 @@ func _on_data_package(received_data_package):
 	var data_package_info = received_data_package["data"]["games"][GAME]
 	_data_package = DataPackage.BrotatoDataPackage.from_data_package(data_package_info)
 	websocket_client.send_connect(GAME, player, password)
+
+func _on_bounced(command):
+	var bounce_tags = command.get("tags", [])
+	if bounce_tags.has("DeathLink") and deathlink_enabled and not _handling_deathlink:
+		# Make sure we don't respond to our own DeathLink.
+		var deathlink_source = command["data"]["source"]
+		if deathlink_source != player: 
+			ModLoaderLog.debug("DeathLink command received, triggering player kill", LOG_NAME)
+			_handling_deathlink = true
+			emit_signal("deathlink_kill_player")
+		else:
+			ModLoaderLog.debug("Ignoring our own DeathLink", LOG_NAME)
+

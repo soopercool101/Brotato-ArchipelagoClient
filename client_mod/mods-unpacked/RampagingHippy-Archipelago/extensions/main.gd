@@ -52,6 +52,7 @@ func _ready() -> void:
 		_status = _ap_client.connect("gold_received", self, "_on_ap_gold_received")
 		_status = _ap_client.connect("item_received", self, "_on_ap_item_received")
 		_status = _ap_client.connect("upgrade_received", self, "_on_ap_upgrade_received")
+		_status = _ap_client.connect("deathlink_kill_player", self, "_on_deathlink_kill_player")
 
 # Archipelago Item received handlers
 
@@ -95,6 +96,11 @@ func _on_ap_upgrade_received(upgrade_tier: int):
 	emit_signal("upgrade_to_process_added", ap_upgrade_to_process_icon, upgrade_level)
 	_upgrades_to_process.push_back(upgrade_level)
 
+# DeathLink handling
+
+func _on_deathlink_kill_player():
+	_player.die()
+
 # Base overrides
 func spawn_consumables(unit: Unit) -> void:
 	if _ap_client.connected_to_multiworld():
@@ -136,3 +142,7 @@ func apply_run_won():
 	if _ap_client.connected_to_multiworld():
 		_ap_client.run_won(RunData.current_character.my_id)
 	.apply_run_won()
+
+func _on_player_died(_p_player: Player) -> void:
+	_ap_client.player_died()
+	._on_player_died(_p_player)
