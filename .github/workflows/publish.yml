@@ -23,7 +23,7 @@ jobs:
 
       - name: Create .apworld
         working-directory: ./apworld
-        run: zip -r ../brotato.apworld brotato -x "brotato/__pycache__/*"
+        run: zip -r ../brotato.apworld brotato -x "brotato/__pycache__/*" -x  "brotato/test/*"
 
       - name: Zip client mod
         working-directory: ./client_mod
