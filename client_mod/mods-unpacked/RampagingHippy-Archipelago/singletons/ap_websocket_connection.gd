@@ -55,20 +55,7 @@ func _ready():
 	set_process(false)
 	
 # Public API
-func connect_to_server(multiworld_url: String):
-	if connection_state == State.STATE_OPEN:
-		return
-	_set_connection_state(State.STATE_CONNECTING)
-	# Try to connect with SSL first. If this doesn't work then the _on_connection_error
-	# callback will try again without SSL.
-	_url = "ws://%s" % multiworld_url
-	ModLoaderLog.info("Connecting to %s" % _url, LOG_NAME)
-	var err = _client.connect_to_url(_url)
-	if not err:
-		# Start processing to poll the connection for data
-		set_process(true)
-
-func connect_to_server_new(server: String) -> bool:
+func connect_to_server(server: String) -> bool:
 	if connection_state == State.STATE_OPEN:
 		return true
 	_set_connection_state(State.STATE_CONNECTING)
