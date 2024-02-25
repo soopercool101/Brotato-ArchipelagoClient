@@ -45,13 +45,20 @@ func _on_connection_state_changed(new_state: int, error: int = 0):
 			_connect_status_label.text = "Connected to multiworld"
 
 	# Allow connecting if disconnected or connected to the server but not the multiworld
-	_connect_button.disabled = not(new_state == 0 or new_state == 3)
+	_connect_button.disabled = not(
+		new_state == ApPlayerSession.ConnectState.DISCONNECTED or
+		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_MULTIWORLD
+	)
 	if _connect_button.disabled and _connect_button.has_focus():
 		# Disabled buttons having focus look bad and don't make sense.
 		_connect_button.release_focus()
 
 	# Allow disconnecting if connected to the server and/or multiworld
-	_disconnect_button.disabled = not(new_state == 3 or new_state == 4)
+	_disconnect_button.disabled = not(
+		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_SERVER or
+		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_MULTIWORLD
+	)
+
 	if _disconnect_button.disabled and _disconnect_button.has_focus():
 		_disconnect_button.release_focus()
 
