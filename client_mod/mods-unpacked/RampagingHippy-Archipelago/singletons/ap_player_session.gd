@@ -26,6 +26,7 @@ enum ConnectResult {
 	AP_INVALID_ITEMS_HANDLING = 9
 	# Fallback in case a new error is added that we don't support yet
 	AP_CONNECTION_REFUSED_UNKNOWN_REASON = 10
+	ALREADY_CONNECTED = 11
 }
 
 class ApDataPackage:
@@ -68,7 +69,7 @@ var slot_data: Dictionary
 var slot_info: Dictionary
 var hint_points: int
 
-var room_info: _AP_TYPES.RoomInfo
+var room_info: Dictionary
 var data_package: ApDataPackage
 
 signal _received_connect_response(message)
@@ -86,7 +87,9 @@ func _connected_or_connection_refused_received(message: Dictionary):
 	emit_signal("_received_connect_response", message)
 
 func connect_to_multiworld(password: String = "", get_data_pacakge: bool = true) -> int:
-	if player.strip_edges().empty():
+	if websocket_client.connected_to_multiworld():
+		return ConnectResult.ALREADY_CONNECTED
+	elif player.strip_edges().empty():
 		return ConnectResult.PLAYER_NOT_SET
 	elif server.strip_edges().empty():
 		return ConnectResult.INVALID_SERVER
@@ -180,8 +183,8 @@ func disconnect_from_multiworld():
 	self.websocket_client.disconnect_from_server()
 	_set_connection_state(ConnectState.DISCONNECTED)
 
-
-func _set_connection_state(state, error: int = 0):
+func _set_connection_state(state: int, error: int = 0):
+	ModLoaderLog.debug("Setting connection state to %s." % ConnectState.keys()[state], LOG_NAME)
 	self.connect_state = state
 	emit_signal("connection_state_changed", self.connect_state, error)
 
