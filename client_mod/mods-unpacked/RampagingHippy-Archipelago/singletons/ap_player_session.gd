@@ -3,11 +3,11 @@ class_name ApPlayerSession
 # Hard-code mod name to avoid cyclical dependency
 var LOG_NAME = "RampagingHippy-Archipelago/ap_player_session"
 
-const _AP_TYPES = preload("./ap_types.gd")
+const _AP_TYPES = preload ("./ap_types.gd")
 enum ConnectState {
 	DISCONNECTED = 0
 	CONNECTING = 1
-	DISCONNECTING = 2  
+	DISCONNECTING = 2
 	CONNECTED_TO_SERVER = 3
 	CONNECTED_TO_MULTIWORLD = 4
 }
@@ -53,7 +53,6 @@ class ApDataPackage:
 			var location_id = location_name_to_id[location_name]
 			location_id_to_name[location_id] = location_name
 
-
 var websocket_client: ApWebSocketConnection
 var connect_state = ConnectState.DISCONNECTED
 var player: String = ""
@@ -86,7 +85,7 @@ func _ready():
 func _connected_or_connection_refused_received(message: Dictionary):
 	emit_signal("_received_connect_response", message)
 
-func connect_to_multiworld(password: String = "", get_data_pacakge: bool = true) -> int:
+func connect_to_multiworld(password: String="", get_data_pacakge: bool=true) -> int:
 	if websocket_client.connected_to_multiworld():
 		return ConnectResult.ALREADY_CONNECTED
 	elif player.strip_edges().empty():
@@ -102,25 +101,27 @@ func connect_to_multiworld(password: String = "", get_data_pacakge: bool = true)
 	# https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/network%20protocol.md#archipelago-connection-handshake
 
 	# 1. Client establishes WebSocket connection to the Archipelago server.
-	var funcstate = websocket_client.connect_to_server(server)
-	var server_connect_result = yield(funcstate, "completed")
+	# Skip if we're already connected to a server
+	if self.connect_state != ConnectState.CONNECTED_TO_SERVER:
+		var funcstate = websocket_client.connect_to_server(server)
+		var server_connect_result = yield (funcstate, "completed")
 
-	if server_connect_result == false:
-		_set_connection_state(ConnectState.DISCONNECTED, ConnectResult.SERVER_CONNECT_FAILURE)
-		return ConnectResult.SERVER_CONNECT_FAILURE
-	else:
-		_set_connection_state(ConnectState.CONNECTED_TO_SERVER)
-		connect_state = ConnectState.CONNECTED_TO_SERVER
+		if server_connect_result == false:
+			_set_connection_state(ConnectState.DISCONNECTED, ConnectResult.SERVER_CONNECT_FAILURE)
+			return ConnectResult.SERVER_CONNECT_FAILURE
+		else:
+			_set_connection_state(ConnectState.CONNECTED_TO_SERVER)
+			connect_state = ConnectState.CONNECTED_TO_SERVER
 	
-	# 2. Server accepts connection and responds with a RoomInfo packet.
-	room_info = yield(websocket_client, "on_room_info")
+		# 2. Server accepts connection and responds with a RoomInfo packet.
+		room_info = yield (websocket_client, "on_room_info")
 
-	# 3. Client may send a GetDataPackage packet.
-	if get_data_pacakge:
-		websocket_client.get_data_package([game])
-		# 4. Server sends a DataPackage packet in return. (If the client sent GetDataPackage.)
-		var data_package_message = yield(websocket_client, "on_data_package")
-		data_package = ApDataPackage.new(data_package_message["data"]["games"][self.game])
+		# 3. Client may send a GetDataPackage packet.
+		if get_data_pacakge:
+			websocket_client.get_data_package([game])
+			# 4. Server sends a DataPackage packet in return. (If the client sent GetDataPackage.)
+			var data_package_message = yield (websocket_client, "on_data_package")
+			data_package = ApDataPackage.new(data_package_message["data"]["games"][self.game])
 
 	# 5. Client sends Connect packet in order to authenticate with the server.
 	# 6. Server validates the client's packet and responds with Connected or ConnectionRefused.
@@ -132,7 +133,7 @@ func connect_to_multiworld(password: String = "", get_data_pacakge: bool = true)
 		"_connected_or_connection_refused_received"
 	)
 	_result = websocket_client.connect(
-		"on_connection_refused", 
+		"on_connection_refused",
 		self,
 		"_connected_or_connection_refused_received"
 	)
@@ -140,7 +141,7 @@ func connect_to_multiworld(password: String = "", get_data_pacakge: bool = true)
 		websocket_client.send_connect(game, player, password)
 	else:
 		websocket_client.send_connect(game, player)
-	var connect_response = yield(self, "_received_connect_response")
+	var connect_response = yield (self, "_received_connect_response")
 
 	if connect_response["cmd"] == "ConnectionRefused":
 		# There may be multiple errors, but there isn't a clean way in Godot to return
@@ -183,7 +184,7 @@ func disconnect_from_multiworld():
 	self.websocket_client.disconnect_from_server()
 	_set_connection_state(ConnectState.DISCONNECTED)
 
-func _set_connection_state(state: int, error: int = 0):
+func _set_connection_state(state: int, error: int=0):
 	ModLoaderLog.debug("Setting connection state to %s." % ConnectState.keys()[state], LOG_NAME)
 	self.connect_state = state
 	emit_signal("connection_state_changed", self.connect_state, error)
