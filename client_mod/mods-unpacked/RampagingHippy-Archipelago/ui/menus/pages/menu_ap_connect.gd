@@ -64,6 +64,8 @@ func _on_connection_state_changed(new_state: int, error: int = 0):
 
 	if error != 0:
 		_set_error(error)
+	else:
+		_clear_error()
 
 func _set_error(error_reason: int):
 	# See ConnectResult enum in ap_player_session.gd
