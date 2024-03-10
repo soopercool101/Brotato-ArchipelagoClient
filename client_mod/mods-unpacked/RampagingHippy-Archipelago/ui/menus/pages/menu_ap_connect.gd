@@ -25,7 +25,7 @@ func _ready():
 #	if get_tree().current_scene.name == self.name && Input.is_key_pressed(KEY_ENTER):
 #		_on_ConnectButton_pressed()
 
-func _on_connection_state_changed(new_state: int, error: int = 0):
+func _on_connection_state_changed(new_state: int, error: int=0):
 	# See ConnectState enum in ap_player_session.gd
 	match new_state:
 		0:
@@ -45,18 +45,20 @@ func _on_connection_state_changed(new_state: int, error: int = 0):
 			_connect_status_label.text = "Connected to multiworld"
 
 	# Allow connecting if disconnected or connected to the server but not the multiworld
-	_connect_button.disabled = not(
-		new_state == ApPlayerSession.ConnectState.DISCONNECTED or
-		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_MULTIWORLD
+	_connect_button.disabled = (
+		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_MULTIWORLD or
+		new_state == ApPlayerSession.ConnectState.DISCONNECTING
 	)
 	if _connect_button.disabled and _connect_button.has_focus():
-		# Disabled buttons having focus look bad and don't make sense.
+		# Disabled buttons having focus look ugly and don't make sense.
 		_connect_button.release_focus()
 
 	# Allow disconnecting if connected to the server and/or multiworld
-	_disconnect_button.disabled = not(
-		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_SERVER or
-		new_state == ApPlayerSession.ConnectState.CONNECTED_TO_MULTIWORLD
+	_disconnect_button.disabled = (
+		new_state == ApPlayerSession.ConnectState.DISCONNECTED or
+		new_state == ApPlayerSession.ConnectState.DISCONNECTED or
+		 # TODO: Remove below if we figure out how to cancel the connection process.
+		new_state == ApPlayerSession.ConnectState.CONNECTING
 	)
 
 	if _disconnect_button.disabled and _disconnect_button.has_focus():
@@ -104,11 +106,6 @@ func _clear_error():
 func _on_ConnectButton_pressed():
 	_ap_session.server = _host_edit.text
 	_ap_session.player = _player_edit.text
-
-	# _connect_status_label.text = "Connecting"
-	# _connect_error_label.visible = false
-	# _connect_button.visible = false
-	# _disconnect_button.visible = true
 
 	# Fire and forget this coroutine call, signal handlers will take care of the rest.
 	_ap_session.connect_to_multiworld(_password_edit.text)
