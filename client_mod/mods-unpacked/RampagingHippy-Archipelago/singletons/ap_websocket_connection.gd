@@ -11,7 +11,7 @@ enum State {
 # Hard-code mod name to avoid cyclical dependency
 const LOG_NAME = "RampagingHippy-Archipelago/ap_websocket_connection"
 const _DEFAULT_PORT = 38281
-const _CONNECT_TIMEOUT = 5# 8/3 # Seconds
+const _CONNECT_TIMEOUT = 5 # 8/3 # Seconds
 
 # The client handles connecting to the server, and the peer handles sending/receiving
 # data after connecting. We set the peer in the "_on_connection_established" callback,
@@ -25,6 +25,7 @@ var connection_state = State.STATE_CLOSED
 
 signal connection_state_changed
 signal on_connected(connection_data)
+signal on_connection_refused(refused_reason)
 signal on_room_info(room_info)
 signal on_received_items
 signal on_location_info
@@ -70,7 +71,7 @@ func connect_to_server(server: String) -> bool:
 	_make_connection_timeout(wss_url)
 	var _result = _client.connect_to_url(wss_url) # Return value is useless
 
-	var wss_success = yield(self, "_stop_waiting_to_connect")
+	var wss_success = yield (self, "_stop_waiting_to_connect")
 	_waiting_to_connect_to_server = null
 
 	var ws_success = false
@@ -85,7 +86,7 @@ func connect_to_server(server: String) -> bool:
 		_make_connection_timeout(ws_url)
 		_result = _client.connect_to_url(ws_url)
 
-		ws_success = yield(self, "_stop_waiting_to_connect")
+		ws_success = yield (self, "_stop_waiting_to_connect")
 		_waiting_to_connect_to_server = null
 		if ws_success:
 			_url = ws_url
@@ -110,10 +111,10 @@ func disconnect_from_server():
 	# The "connection_closed" signal handler will take care of cleanup
 	_client.disconnect_from_host()
 
-func send_connect(game: String, user: String, password: String = "", slot_data: bool = true):
+func send_connect(game: String, user: String, password: String="", slot_data: bool=true):
 	_send_command({
-		"cmd": "Connect", 
-		"game": game, 
+		"cmd": "Connect",
+		"game": game,
 		"name": user,
 		"password": password,
 		"uuid": "Godot %s: %s" % [game, user], # TODO: What do we need here? We can't generate an actual UUID in 3.5
@@ -195,7 +196,7 @@ func set_notify(keys: Array):
 	})
 
 # WebSocketClient callbacks
-func _on_connection_established(_proto = ""):
+func _on_connection_established(_proto=""):
 	# We succeeded, stop waiting and tell the caller.
 	ModLoaderLog.debug("Successfully connected.", LOG_NAME)
 	emit_signal("_stop_waiting_to_connect", true)
@@ -205,8 +206,7 @@ func _on_connection_error():
 	ModLoaderLog.debug("Error connecting.", LOG_NAME)
 	emit_signal("_stop_waiting_to_connect", false)
 
-
-func _on_connection_closed(was_clean = false):
+func _on_connection_closed(was_clean=false):
 	_set_connection_state(State.STATE_CLOSED)
 	ModLoaderLog.info("AP connection closed, clean: %s." % was_clean, LOG_NAME)
 	_peer = null
@@ -251,7 +251,7 @@ func _init_client():
 	self._peer = null
 
 func _make_connection_timeout(for_url: String):
-	yield(get_tree().create_timer(_CONNECT_TIMEOUT), "timeout")
+	yield (get_tree().create_timer(_CONNECT_TIMEOUT), "timeout")
 	if _waiting_to_connect_to_server == for_url:
 		# We took to long, stop waiting and tell the called we failed.
 		_waiting_to_connect_to_server = false
