@@ -212,6 +212,10 @@ func _on_connection_closed(was_clean=false):
 	_peer = null
 
 func _on_data_received():
+	if self._peer == null:
+		# Rare case where we have an dead connection to a server that suddenly
+		# becomes active. Just ignore because we're not setup for it.
+		return
 	var received_data_str = _peer.get_packet().get_string_from_utf8()
 	var received_data = JSON.parse(received_data_str)
 	if received_data.result == null:
