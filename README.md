@@ -26,7 +26,7 @@ To play Brotato as part of a randomizer, download the latest version of
 `RampagingHippy-Archipelago.zip`, then copy it **without unzipping** into your Steam
 workshop folder for Brotato. For example, on Windows by default this may be `C:\Program
 Files
-(x86)\steamapps\workshop\content\1942280\Archipelago\RampagingHippy-Archipelago.zip`
+(x86)\Steam\steamapps\workshop\content\1942280\Archipelago\RampagingHippy-Archipelago.zip`
 (`1942280` being Brotato's Steam ID). Note that the `Archipelago` sub-folder can be
 named anything; the .zip file just needs to be within a sub-folder of the `1942280`
 folder.
